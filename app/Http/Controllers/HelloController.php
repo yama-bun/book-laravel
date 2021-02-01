@@ -4,22 +4,58 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Http\Requests\HelloRequest;
+use Validator;
 
 
 class HelloController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = [
-            ['name' => '山田孝之', 'mail' => 'takayuki@yamada'],
-            ['name' => '小栗旬', 'mail' => 'syun@oguri'],
-            ['name' => '綾野剛', 'mail' => 'gou@ayano'],
-        ];
-        return view('hello.index', ['data' => $data]);
+
+        $validator = Validator::make($request->query(), [
+            'id' => 'required',
+            'pass' => 'required',
+        ]);
+        if ($validator->fails()) {
+            $msg = 'クエリーに問題あります。';
+        } else {
+            $msg = 'ID/PASSを受け付けました。フォームを入力してください。';
+        }
+
+        return view('hello.index', ['msg' => $msg,]);
     }
 
     public function post(Request $request)
     {
-        return view('hello.index', ['msg'=>$request->msg]);
+        $rules = [
+            'name' => 'required',
+            'mail' => 'email',
+            'age' => 'numeric',
+        ];
+        $messages = [
+            'name,required' => '名前は必ず入力してください、',
+            'mail.email' => 'メールアドレスが必要です。',
+            'age.numeric' => '年齢を整数で入力してください。',
+            'age.min' => '年齢は０歳以上で入力してください',
+            'age.max' => '年齢は200歳以下で入力してください。',
+        ];
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        $validator->sometimes('age', 'min:0', function($input){
+            return is_numeric($input->age);
+        });
+
+        $validator->sometimes('age', 'max:200', function($input){
+            return is_numeric($input->age);
+        });
+
+        if ($validator->fails()) {
+            return redirect('/hello')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        return view('hello.index', ['msg' => '正しく入力されました！']);
     }
 }
