@@ -8,7 +8,7 @@ use App\Scopes\ScopePerson;
 
 class Person extends Model
 {
-    
+
 
     public function scopeNameEqual($query, $str)
     {
@@ -36,5 +36,10 @@ class Person extends Model
     public function getData()
     {
         return $this->id . ': ' . $this->name . ' (' . $this->age . ')';
+    }
+
+    public function boards()
+    {
+        return $this->hasMany('App\Board');
     }
 }
